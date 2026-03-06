@@ -1,14 +1,16 @@
 import json
 import datetime
+import os
 from aiogram import Bot, Dispatcher, types
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.utils import executor
-import os
 
-# переменные окружения
+# =======================
+# Переменные окружения
+# =======================
 TOKEN = os.getenv("8747058515:AAEXyeJVmm4V-xSQvOEXETzMuuHrPcv9DAA")        # токен от BotFather
 ADMIN_ID = int(os.getenv("1962562160")) # твой Telegram ID
 
@@ -16,6 +18,9 @@ bot = Bot(token=TOKEN)
 storage = MemoryStorage()
 dp = Dispatcher(bot, storage=storage)
 
+# =======================
+# Базы данных
+# =======================
 orders = {}
 clients = {}
 
@@ -30,16 +35,19 @@ def save_clients():
     with open("clients.json", "w") as f:
         json.dump(clients, f)
 
-# состояния для FSM
+# =======================
+# FSM для ввода данных
+# =======================
 class Form(StatesGroup):
     main_phone = State()
     extra_phone = State()
     address = State()
     wish = State()
 
-# главное меню
+# =======================
+# Главное меню
+# =======================
 location_button = KeyboardButton("📍 Отправить геолокацию", request_location=True)
-
 menu = ReplyKeyboardMarkup(resize_keyboard=True)
 menu.add("📦 Выбрать комплект")
 menu.add("📱 Основной номер")
@@ -51,28 +59,35 @@ menu.add("📄 Отправить удостоверение")
 menu.add("📋 Проверить заказ")
 menu.add("✅ Оформить заказ")
 
+# =======================
+# Хендлеры
+# =======================
+
 # старт
 @dp.message_handler(commands=["start"])
 async def start(message: types.Message):
-    orders[message.from_user.id] = {}
-    await message.answer(
-        "Добро пожаловать в аренду кальянов 🚬",
-        reply_markup=menu
-    )
+    user_id = message.from_user.id
+    if user_id not in orders:
+        orders[user_id] = {}
+    await message.answer("Добро пожаловать в аренду кальянов 🚬", reply_markup=menu)
 
 # выбор комплекта
 @dp.message_handler(lambda m: m.text == "📦 Выбрать комплект")
 async def choose_pack(message: types.Message):
+    user_id = message.from_user.id
+    if user_id not in orders:
+        orders[user_id] = {}
     kb = ReplyKeyboardMarkup(resize_keyboard=True)
-    kb.add("Стандарт - 7000")
-    kb.add("Премиум - 10000")
-    kb.add("VIP - 15000")
+    kb.add("Стандарт - 7000", "Премиум - 10000", "VIP - 15000")
     kb.add("⬅ Назад")
     await message.answer("Выберите комплект", reply_markup=kb)
 
 @dp.message_handler(lambda m: m.text in ["Стандарт - 7000", "Премиум - 10000", "VIP - 15000"])
 async def save_pack(message: types.Message):
-    orders[message.from_user.id]["pack"] = message.text
+    user_id = message.from_user.id
+    if user_id not in orders:
+        orders[user_id] = {}
+    orders[user_id]["pack"] = message.text
     await message.answer("Комплект сохранён ✅", reply_markup=menu)
 
 # основной номер
@@ -83,7 +98,10 @@ async def main_phone(message: types.Message):
 
 @dp.message_handler(state=Form.main_phone)
 async def save_main_phone(message: types.Message, state: FSMContext):
-    orders[message.from_user.id]["phone"] = message.text
+    user_id = message.from_user.id
+    if user_id not in orders:
+        orders[user_id] = {}
+    orders[user_id]["phone"] = message.text
     await message.answer("Основной номер сохранён ✅", reply_markup=menu)
     await state.finish()
 
@@ -95,33 +113,48 @@ async def extra_phone(message: types.Message):
 
 @dp.message_handler(state=Form.extra_phone)
 async def save_extra_phone(message: types.Message, state: FSMContext):
-    orders[message.from_user.id]["extra_phone"] = message.text
+    user_id = message.from_user.id
+    if user_id not in orders:
+        orders[user_id] = {}
+    orders[user_id]["extra_phone"] = message.text
     await message.answer("Дополнительный номер сохранён ✅", reply_markup=menu)
     await state.finish()
 
 # доставка
 @dp.message_handler(lambda m: m.text == "🚚 Доставка")
 async def delivery(message: types.Message):
-    orders[message.from_user.id]["delivery"] = "Доставка"
+    user_id = message.from_user.id
+    if user_id not in orders:
+        orders[user_id] = {}
+    orders[user_id]["delivery"] = "Доставка"
     await Form.address.set()
     await message.answer("Введите адрес доставки")
 
 @dp.message_handler(state=Form.address)
 async def save_address(message: types.Message, state: FSMContext):
-    orders[message.from_user.id]["address"] = message.text
+    user_id = message.from_user.id
+    if user_id not in orders:
+        orders[user_id] = {}
+    orders[user_id]["address"] = message.text
     await message.answer("Адрес сохранён ✅", reply_markup=menu)
     await state.finish()
 
 # самовывоз
 @dp.message_handler(lambda m: m.text == "🏠 Самовывоз")
 async def pickup(message: types.Message):
-    orders[message.from_user.id]["delivery"] = "Самовывоз"
+    user_id = message.from_user.id
+    if user_id not in orders:
+        orders[user_id] = {}
+    orders[user_id]["delivery"] = "Самовывоз"
     await message.answer("Самовывоз выбран ✅", reply_markup=menu)
 
 # геолокация
 @dp.message_handler(content_types=types.ContentType.LOCATION)
 async def location(message: types.Message):
-    orders[message.from_user.id]["location"] = message.location
+    user_id = message.from_user.id
+    if user_id not in orders:
+        orders[user_id] = {}
+    orders[user_id]["location"] = message.location
     await message.answer("Геолокация получена 📍", reply_markup=menu)
 
 # пожелания
@@ -132,15 +165,21 @@ async def wish(message: types.Message):
 
 @dp.message_handler(state=Form.wish)
 async def save_wish(message: types.Message, state: FSMContext):
-    orders[message.from_user.id]["wish"] = message.text
+    user_id = message.from_user.id
+    if user_id not in orders:
+        orders[user_id] = {}
+    orders[user_id]["wish"] = message.text
     await message.answer("Пожелания сохранены ✅", reply_markup=menu)
     await state.finish()
 
-# удостоверение PDF
+# PDF удостоверение
 @dp.message_handler(content_types=types.ContentType.DOCUMENT)
 async def document(message: types.Message):
+    user_id = message.from_user.id
+    if user_id not in orders:
+        orders[user_id] = {}
     if message.document.mime_type == "application/pdf":
-        orders[message.from_user.id]["doc"] = message.document.file_id
+        orders[user_id]["doc"] = message.document.file_id
         await message.answer("PDF удостоверение получено ✅", reply_markup=menu)
     else:
         await message.answer("Пожалуйста, отправьте удостоверение в PDF формате")
@@ -148,7 +187,10 @@ async def document(message: types.Message):
 # проверка заказа
 @dp.message_handler(lambda m: m.text == "📋 Проверить заказ")
 async def check(message: types.Message):
-    data = orders.get(message.from_user.id, {})
+    user_id = message.from_user.id
+    if user_id not in orders:
+        orders[user_id] = {}
+    data = orders[user_id]
     text = f"""
 Ваш заказ:
 
@@ -165,9 +207,11 @@ async def check(message: types.Message):
 @dp.message_handler(lambda m: m.text == "✅ Оформить заказ")
 async def finish(message: types.Message):
     user_id = message.from_user.id
-    data = orders.get(user_id, {})
+    if user_id not in orders:
+        orders[user_id] = {}
+    data = orders[user_id]
 
-    # проверка обязательных полей
+    # обязательные поля
     if not data.get("pack"):
         await message.answer("Выберите комплект")
         return
