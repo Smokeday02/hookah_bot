@@ -242,28 +242,13 @@ async def save_wish(message: types.Message, state: FSMContext):
 @dp.message_handler(content_types=types.ContentType.DOCUMENT)
 async def document(message: types.Message):
     user_id = message.from_user.id
-
     if user_id not in orders:
         orders[user_id] = {}
-
     if message.document.mime_type == "application/pdf":
-        file_id = message.document.file_id
-        orders[user_id]["doc"] = file_id
-
-        # сообщение пользователю
-        await message.answer("✅ PDF удостоверение получено", reply_markup=menu)
-
-        # отправка админу
-        await bot.send_document(
-            ADMIN_ID,
-            file_id,
-            caption=f"📄 Удостоверение от пользователя\n"
-                    f"ID: {user_id}\n"
-                    f"Username: @{message.from_user.username}"
-        )
-
+        orders[user_id]["doc"] = message.document.file_id
+        await message.answer("PDF удостоверение получено ✅", reply_markup=menu)
     else:
-        await message.answer("❌ Пожалуйста, отправьте удостоверение в PDF формате")
+        await message.answer("Пожалуйста, отправьте удостоверение в PDF формате")
 
 # проверка заказа
 @dp.message_handler(lambda m: m.text == "📋 Проверить заказ")
@@ -372,6 +357,7 @@ async def admin_buttons(callback: types.CallbackQuery):
 # запуск бота
 
 executor.start_polling(dp)
+
 
 
 
