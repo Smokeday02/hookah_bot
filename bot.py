@@ -78,7 +78,7 @@ async def choose_pack(message: types.Message):
     if user_id not in orders:
         orders[user_id] = {}
     kb = ReplyKeyboardMarkup(resize_keyboard=True)
-    kb.add("Легкий 2 забивки - 10000", "Средний 2 забивки - 13000", "Крепкий 2 забивки - 16000")
+    kb.add("Легкий - 10000", "Средний - 13000", "Крепкий - 16000")
     kb.add("⬅ Назад")
     await message.answer("Выберите комплект", reply_markup=kb)
 @dp.message_handler(lambda message: message.text == "⬅ Назад")
@@ -91,10 +91,8 @@ async def back(message: types.Message):
         reply_markup=kb
     )
 
-@dp.message_handler(lambda m: m.text in ["Легкий 2 забивки - 10000", "Средний 2 забивки - 13000", "Крепкий 2 забивки - 16000"])
+@dp.message_handler(lambda m: m.text in ["Легкий - 10000"])
 async def save_pack(message: types.Message):
-@dp.message_handler(lambda message: message.text == "Легкий - 10000")
-async def standart(message: types.Message):
 
     text = """
 🔥 Легкий
@@ -109,6 +107,56 @@ async def standart(message: types.Message):
 • Плитка + 2000 тг
 
 Цена: 10000 тг
+"""
+
+    await message.answer(text)
+    user_id = message.from_user.id
+    if user_id not in orders:
+        orders[user_id] = {}
+    orders[user_id]["pack"] = message.text
+    await message.answer("Комплект сохранён ✅", reply_markup=menu)
+
+@dp.message_handler(lambda m: m.text in ["Средний - 13000"])
+async def save_pack(message: types.Message):
+
+    text = """
+🔥 Средний
+
+В комплект входит:
+• Кальян
+• Средний табак на 2 забивки
+• Угли 6 шт
+• Мундштуки
+• Калауд
+• Шипцы
+• Плитка в комплекте
+
+Цена: 13000 тг
+"""
+
+    await message.answer(text)
+    user_id = message.from_user.id
+    if user_id not in orders:
+        orders[user_id] = {}
+    orders[user_id]["pack"] = message.text
+    await message.answer("Комплект сохранён ✅", reply_markup=menu)
+
+@dp.message_handler(lambda m: m.text in ["Средний - 13000"])
+async def save_pack(message: types.Message):
+
+    text = """
+🔥 Средний
+
+В комплект входит:
+• Кальян
+• Крепкий табак на 2 забивки
+• Угли 6 шт
+• Мундштуки
+• Калауд
+• Шипцы
+• Плитка в комплекте
+
+Цена: 16000 тг
 """
 
     await message.answer(text)
@@ -334,5 +382,6 @@ async def admin_buttons(callback: types.CallbackQuery):
 # запуск бота
 
 executor.start_polling(dp)
+
 
 
