@@ -131,11 +131,11 @@ async def save_pack(message: types.Message):
     orders[user_id]["pack"] = message.text
     await message.answer("Комплект сохранён ✅", reply_markup=menu)
 
-@dp.message_handler(lambda m: m.text in ["Средний - 13000"])
+@dp.message_handler(lambda m: m.text in ["Крепкий - 16000"])
 async def save_pack(message: types.Message):
 
     text = """
-🔥 Средний
+🔥 Крепкий
 
 В комплект входит:
 • Кальян
@@ -372,6 +372,7 @@ async def admin_buttons(callback: types.CallbackQuery):
 # запуск бота
 
 executor.start_polling(dp)
+
 
 
 
