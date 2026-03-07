@@ -51,7 +51,7 @@ location_button = KeyboardButton("📍 Отправить геолокацию",
 menu = ReplyKeyboardMarkup(resize_keyboard=True)
 menu.add("📦 Выбрать комплект")
 menu.add("📱 Основной номер")
-menu.add("☎️ Доп номер")
+menu.add("☎️ Дополнительный номер")
 menu.add("🚚 Доставка", "🏠 Самовывоз")
 menu.add(location_button)
 menu.add("📝 Пожелания")
@@ -69,7 +69,7 @@ async def start(message: types.Message):
     user_id = message.from_user.id
     if user_id not in orders:
         orders[user_id] = {}
-    await message.answer("Добро пожаловать в аренду кальянов 🚬", reply_markup=menu)
+    await message.answer("Здравствуйте, можете выбрать комплект 🚬", reply_markup=menu)
 
 # выбор комплекта
 @dp.message_handler(lambda m: m.text == "📦 Выбрать комплект")
@@ -78,12 +78,40 @@ async def choose_pack(message: types.Message):
     if user_id not in orders:
         orders[user_id] = {}
     kb = ReplyKeyboardMarkup(resize_keyboard=True)
-    kb.add("Стандарт - 7000", "Премиум - 10000", "VIP - 15000")
+    kb.add("Легкий 2 забивки - 10000", "Средний 2 забивки - 13000", "Крепкий 2 забивки - 16000")
     kb.add("⬅ Назад")
     await message.answer("Выберите комплект", reply_markup=kb)
+@dp.message_handler(lambda message: message.text == "⬅ Назад")
+async def back(message: types.Message):
+    kb = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    kb.add("📦 Заказать кальян")
 
-@dp.message_handler(lambda m: m.text in ["Стандарт - 7000", "Премиум - 10000", "VIP - 15000"])
+    await message.answer(
+        "Вы вернулись в главное меню",
+        reply_markup=kb
+    )
+
+@dp.message_handler(lambda m: m.text in ["Легкий 2 забивки - 10000", "Средний 2 забивки - 13000", "Крепкий 2 забивки - 16000"])
 async def save_pack(message: types.Message):
+@dp.message_handler(lambda message: message.text == "Легкий - 10000")
+async def standart(message: types.Message):
+
+    text = """
+🔥 Легкий
+
+В комплект входит:
+• Кальян
+• Табак легкий на 2 забивки
+• Угли 6 шт
+• Мундштуки
+• Калауд
+• Шипцы
+• Плитка + 2000 тг
+
+Цена: 10000 тг
+"""
+
+    await message.answer(text)
     user_id = message.from_user.id
     if user_id not in orders:
         orders[user_id] = {}
@@ -106,7 +134,7 @@ async def save_main_phone(message: types.Message, state: FSMContext):
     await state.finish()
 
 # дополнительный номер
-@dp.message_handler(lambda m: m.text == "☎️ Доп номер")
+@dp.message_handler(lambda m: m.text == "☎️ Дополнительный номер")
 async def extra_phone(message: types.Message):
     await Form.extra_phone.set()
     await message.answer("Введите дополнительный номер телефона")
@@ -161,7 +189,7 @@ async def location(message: types.Message):
 @dp.message_handler(lambda m: m.text == "📝 Пожелания")
 async def wish(message: types.Message):
     await Form.wish.set()
-    await message.answer("Напишите ваши пожелания")
+    await message.answer("Напишите ваши пожелания, предпочтения")
 
 @dp.message_handler(state=Form.wish)
 async def save_wish(message: types.Message, state: FSMContext):
@@ -176,13 +204,28 @@ async def save_wish(message: types.Message, state: FSMContext):
 @dp.message_handler(content_types=types.ContentType.DOCUMENT)
 async def document(message: types.Message):
     user_id = message.from_user.id
+
     if user_id not in orders:
         orders[user_id] = {}
+
     if message.document.mime_type == "application/pdf":
-        orders[user_id]["doc"] = message.document.file_id
-        await message.answer("PDF удостоверение получено ✅", reply_markup=menu)
+        file_id = message.document.file_id
+        orders[user_id]["doc"] = file_id
+
+        # сообщение пользователю
+        await message.answer("✅ PDF удостоверение получено", reply_markup=menu)
+
+        # отправка админу
+        await bot.send_document(
+            ADMIN_ID,
+            file_id,
+            caption=f"📄 Удостоверение от пользователя\n"
+                    f"ID: {user_id}\n"
+                    f"Username: @{message.from_user.username}"
+        )
+
     else:
-        await message.answer("Пожалуйста, отправьте удостоверение в PDF формате")
+        await message.answer("❌ Пожалуйста, отправьте удостоверение в PDF формате")
 
 # проверка заказа
 @dp.message_handler(lambda m: m.text == "📋 Проверить заказ")
@@ -233,12 +276,12 @@ async def finish(message: types.Message):
 
     # цена
     price = 0
-    if "7000" in data["pack"]:
-        price = 7000
-    elif "10000" in data["pack"]:
+    if "10000" in data["pack"]:
         price = 10000
-    elif "15000" in data["pack"]:
-        price = 15000
+    elif "13000" in data["pack"]:
+        price = 13000
+    elif "16000" in data["pack"]:
+        price = 16000
     if data.get("delivery") == "Доставка":
         price += 2000
 
@@ -281,7 +324,7 @@ async def admin_buttons(callback: types.CallbackQuery):
     action, user_id = callback.data.split("_")
     user_id = int(user_id)
     if action == "accept":
-        await bot.send_message(user_id, "✅ Ваш заказ принят")
+        await bot.send_message(user_id, "✅ Ваш заказ принят, в ближайшее время менеджер свяжется в вами!")
     elif action == "decline":
         await bot.send_message(user_id, "❌ Заказ отклонён")
     elif action == "courier":
@@ -291,4 +334,5 @@ async def admin_buttons(callback: types.CallbackQuery):
 # запуск бота
 
 executor.start_polling(dp)
+
 
