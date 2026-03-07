@@ -11,7 +11,7 @@ from aiogram.utils import executor
 # =======================
 # Переменные окружения
 # =======================
-TOKEN = os.getenv("8747058515:AAEXyeJVmm4V-xSQvOEXETzMuuHrPcv9DAA")        # токен от BotFather
+TOKEN = 8747058515:AAEXyeJVmm4V-xSQvOEXETzMuuHrPcv9DAA      # токен от BotFather
 ADMIN_ID = 1962562160 # твой Telegram ID
 
 bot = Bot(token=TOKEN)
@@ -289,4 +289,5 @@ async def admin_buttons(callback: types.CallbackQuery):
     await callback.answer()
 
 # запуск бота
+
 executor.start_polling(dp)
