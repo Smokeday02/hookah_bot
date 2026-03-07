@@ -79,17 +79,6 @@ async def choose_pack(message: types.Message):
         orders[user_id] = {}
     kb = ReplyKeyboardMarkup(resize_keyboard=True)
     kb.add("Легкий - 10000", "Средний - 13000", "Крепкий - 16000")
-    kb.add("⬅ Назад")
-    await message.answer("Выберите комплект", reply_markup=kb)
-@dp.message_handler(lambda message: message.text == "⬅ Назад")
-async def back(message: types.Message):
-    kb = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    kb.add("📦 Заказать кальян")
-
-    await message.answer(
-        "Вы вернулись в главное меню",
-        reply_markup=kb
-    )
 
 @dp.message_handler(lambda m: m.text in ["Легкий - 10000"])
 async def save_pack(message: types.Message):
@@ -382,6 +371,7 @@ async def admin_buttons(callback: types.CallbackQuery):
 # запуск бота
 
 executor.start_polling(dp)
+
 
 
 
