@@ -400,6 +400,22 @@ async def admin_buttons(callback: types.CallbackQuery):
 # Хендлеры админа
 # =======================
 
+@dp.message_handler(commands=["admin"])
+async def admin_menu(message: types.Message):
+    user_id = message.from_user.id
+    
+    if user_id != ADMIN_ID:
+        await message.answer("❌ У вас нет доступа к этому меню")
+        return
+    
+    # клавиатура для админа
+    admin_kb = ReplyKeyboardMarkup(resize_keyboard=True)
+    admin_kb.add("📊 Активные заказы")
+    admin_kb.add("📦 Завершить заказ")
+    admin_kb.add("📈 Кол-во заказов клиента")
+    
+    await message.answer("👮‍♂️ Меню администратора:", reply_markup=admin_kb)
+
 # показать все активные заказы
 @dp.message_handler(lambda m: m.from_user.id == ADMIN_ID and m.text == "📊 Активные заказы")
 async def active_orders(message: types.Message):
@@ -448,6 +464,7 @@ async def finish_order_callback(callback: types.CallbackQuery):
 # запуск бота
 
 executor.start_polling(dp)
+
 
 
 
