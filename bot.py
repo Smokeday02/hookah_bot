@@ -510,7 +510,7 @@ async def finish_order_prompt(message: types.Message):
         return
     for o in orders_list:
         kb = InlineKeyboardMarkup()
-    kb.add(InlineKeyboardButton("✅ Завершить", callback_data=f"finish_{o[0]}"))  # o[0] = id заказа
+    kb.add(InlineKeyboardButton("✅ Завершить", callback_data=f"finish_{pack}"))  # o[0] = id заказа
     text = f"Комплект: {o[3]}\nТелефон: {o[1]}\nСпособ получения: {o[2]}"
     await bot.send_message(ADMIN_ID, text, reply_markup=kb)
 
@@ -546,6 +546,7 @@ async def finish_order(callback: types.CallbackQuery):
 # запуск бота
 
 executor.start_polling(dp)
+
 
 
 
