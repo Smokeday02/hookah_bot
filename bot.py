@@ -228,10 +228,10 @@ async def save_main_phone(message: types.Message, state: FSMContext):
     user_id = message.from_user.id
     main_phone = message.text
     cursor.execute(
-    "UPDATE clients SET main_phone=? WHERE user_id=?",
-    (phone, user_id)
-)
-conn.commit()
+         "UPDATE clients SET main_phone=? WHERE user_id=?",
+         (phone, user_id)
+    )
+    conn.commit()
     if user_id not in orders:
         orders[user_id] = {}
     orders[user_id]["phone"] = message.text
@@ -525,6 +525,7 @@ async def finish_order_callback(callback: types.CallbackQuery):
 # запуск бота
 
 executor.start_polling(dp)
+
 
 
 
