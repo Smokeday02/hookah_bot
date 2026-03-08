@@ -7,7 +7,6 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.utils import executor
-from database import add_user, add_order, get_users, get_orders
 
 # =======================
 # Переменные окружения
@@ -242,20 +241,14 @@ async def save_wish(message: types.Message, state: FSMContext):
 # PDF удостоверение
 @dp.message_handler(content_types=types.ContentType.DOCUMENT)
 async def document(message: types.Message):
-
-    user_id = str(message.from_user.id)
-
+    user_id = message.from_user.id
     if user_id not in orders:
         orders[user_id] = {}
-
     if message.document.mime_type == "application/pdf":
-
         orders[user_id]["doc"] = message.document.file_id
-
         await message.answer("PDF удостоверение получено ✅", reply_markup=menu)
-
     else:
-        await message.answer("Пожалуйста отправьте PDF файл")
+        await message.answer("Пожалуйста, отправьте удостоверение в PDF формате")
 
 # проверка заказа
 @dp.message_handler(lambda m: m.text == "📋 Проверить заказ")
@@ -283,16 +276,6 @@ async def finish(message: types.Message):
     if user_id not in orders:
         orders[user_id] = {}
     data = orders[user_id]
-    text = "📦 Новый заказ\n\n"
-
-    for k, v in data.items():
-        text += f"{k}: {v}\n"
-
-    await bot.send_message(ADMIN_ID, text)
-
-    await message.answer("Заказ отправлен администратору ✅")
-
-    orders[user_id] = {}
 
     # обязательные поля
     if not data.get("pack"):
@@ -303,9 +286,6 @@ async def finish(message: types.Message):
         return
     if not data.get("doc"):
         await message.answer("Отправьте PDF удостоверение")
-        return
-    if not data.get("extra_phone"):
-        await message.answer("Введите дополнительный номер")
         return
 
     # база клиентов
@@ -373,57 +353,6 @@ async def admin_buttons(callback: types.CallbackQuery):
     elif action == "courier":
         await bot.send_message(user_id, "🚚 Курьер выехал")
     await callback.answer()
-    
-    # админ панель
-@dp.message_handler(commands=["admin"])
-async def admin(message: types.Message):
-
-    if message.from_user.id != ADMIN_ID:
-        return
-
-    kb = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    kb.add("📦 Заказы")
-    kb.add("👤 Клиенты")
-
-    await message.answer("Админ панель", reply_markup=kb)
-
-
-    # показать заказы
-@dp.message_handler(lambda m: m.text == "📦 Заказы")
-async def orders(message: types.Message):
-
-    if message.from_user.id != ADMIN_ID:
-        return
-
-    orders = get_orders()
-
-    text = "📦 Заказы:\n\n"
-
-    for order in orders:
-        text += f"ID: {order[0]} | User: {order[1]} | Комплект: {order[2]}\n"
-
-    await message.answer(text)
-
-
-# показать клиентов
-@dp.message_handler(lambda m: m.text == "👤 Клиенты")
-async def users(message: types.Message):
-
-    if message.from_user.id != ADMIN_ID:
-        return
-
-    users = get_users()
-
-    text = "👤 Клиенты:\n\n"
-
-    for user in users:
-        text += f"ID: {user[0]} | Телефон: {user[1]}\n"
-
-    await message.answer(text)
-
-
-if __name__ == "__main__":
-    executor.start_polling(dp)
 
 # запуск бота
 
