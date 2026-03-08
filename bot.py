@@ -39,7 +39,7 @@ conn.commit()
 # =======================
 # Функции для работы с базой
 # =======================
-async def create_order(user_id, pack):
+def create_order(user_id, pack):
     cursor.execute(
         "INSERT INTO orders (user_id, pack, status) VALUES (?, ?, ?)",
         (user_id, pack, 'active')
@@ -142,7 +142,7 @@ async def save_pack(message: types.Message):
     if user_id not in orders:
         orders[user_id] = {}
     orders[user_id]["pack"] = message.text
-    await create_order(user_id, pack)
+    create_order(user_id, pack)
     await message.answer("Комплект сохранён ✅", reply_markup=menu)
 
 @dp.message_handler(lambda m: m.text in ["Средний - 13000"])
@@ -168,7 +168,7 @@ async def save_pack(message: types.Message):
     if user_id not in orders:
         orders[user_id] = {}
     orders[user_id]["pack"] = message.text
-    await create_order(user_id, pack)
+    create_order(user_id, pack)
     await message.answer("Комплект сохранён ✅", reply_markup=menu)
 
 @dp.message_handler(lambda m: m.text in ["Крепкий - 16000"])
@@ -194,7 +194,7 @@ async def save_pack(message: types.Message):
     if user_id not in orders:
         orders[user_id] = {}
     orders[user_id]["pack"] = message.text
-    await create_order(user_id, pack)
+    create_order(user_id, pack)
     await message.answer("Комплект сохранён ✅", reply_markup=menu)
 
 # основной номер
@@ -467,6 +467,7 @@ async def finish_order_callback(callback: types.CallbackQuery):
 # запуск бота
 
 executor.start_polling(dp)
+
 
 
 
