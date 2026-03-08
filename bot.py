@@ -21,7 +21,7 @@ def create_client_if_not_exists(user_id, phone=None):
     cursor.execute("SELECT * FROM clients WHERE user_id = ?", (user_id,))
     if cursor.fetchone() is None:
         cursor.execute(
-            "INSERT INTO clients (user_id, phone) VALUES (?, ?)",
+            "INSERT INTO clients (user_id, main_phone) VALUES (?, ?)",
             (user_id, phone)
         )
         conn.commit()
@@ -498,6 +498,7 @@ async def finish_order_callback(callback: types.CallbackQuery):
 # запуск бота
 
 executor.start_polling(dp)
+
 
 
 
