@@ -510,7 +510,7 @@ async def finish_order_prompt(message: types.Message):
         return
     for o in orders_list:
         kb = InlineKeyboardMarkup()
-        kb.add(InlineKeyboardButton("✅ Завершить", callback_data=f"finish_{o[0]}"))
+        kb.add(InlineKeyboardButton("✅ Завершить", callback_data=f"finish_{order_id}"))
         await message.answer(f"Комплект: {o[0]}\nТелефон: {o[1]}\nСпособ получения: {o[2]}", reply_markup=kb)
 
 # Хендлер кнопки
@@ -541,6 +541,7 @@ async def finish_order(callback: types.CallbackQuery):
 # запуск бота
 
 executor.start_polling(dp)
+
 
 
 
