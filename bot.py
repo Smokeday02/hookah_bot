@@ -1,12 +1,50 @@
 import json
 import datetime
 import os
+import sqlite3
 from aiogram import Bot, Dispatcher, types
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.utils import executor
+
+# =======================
+# SQLite база
+# =======================
+conn = sqlite3.connect("bot.db")  # подключение к базе
+cursor = conn.cursor()
+
+# таблица клиентов
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS clients (
+    user_id INTEGER PRIMARY KEY,
+    main_phone TEXT,
+    extra_phone TEXT
+)
+""")
+
+# таблица заказов
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS orders (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    pack TEXT,
+    status TEXT DEFAULT 'active',  -- active или finished
+    FOREIGN KEY(user_id) REFERENCES clients(user_id)
+)
+""")
+conn.commit()
+
+# =======================
+# Функции для работы с базой
+# =======================
+async def create_order(user_id, pack):
+    cursor.execute(
+        "INSERT INTO orders (user_id, pack, status) VALUES (?, ?, ?)",
+        (user_id, pack, 'active')
+    )
+    conn.commit()
 
 # =======================
 # Переменные окружения
@@ -358,9 +396,59 @@ async def admin_buttons(callback: types.CallbackQuery):
         await bot.send_message(user_id, "🚚 Курьер выехал")
     await callback.answer()
 
+# =======================
+# Хендлеры админа
+# =======================
+
+# показать все активные заказы
+@dp.message_handler(lambda m: m.from_user.id == ADMIN_ID and m.text == "📊 Активные заказы")
+async def active_orders(message: types.Message):
+    cursor.execute("""
+        SELECT o.id, c.main_phone, c.extra_phone, o.pack
+        FROM orders o
+        JOIN clients c ON o.user_id = c.user_id
+        WHERE o.status='active'
+    """)
+    orders_list = cursor.fetchall()
+    if not orders_list:
+        await message.answer("Активных заказов нет ❌")
+        return
+    text = "📋 Активные заказы:\n"
+    for o in orders_list:
+        text += f"\nID: {o[0]}\nОсновной: {o[1]}\nДоп.: {o[2]}\nКомплект: {o[3]}\n---"
+    await message.answer(text)
+
+@dp.message_handler(lambda m: m.from_user.id == ADMIN_ID and m.text == "📦 Завершить заказ")
+async def finish_order_prompt(message: types.Message):
+    # Показываем список активных заказов с кнопкой завершить
+    cursor.execute("""
+        SELECT o.id, c.main_phone, o.pack
+        FROM orders o
+        JOIN clients c ON o.user_id = c.user_id
+        WHERE o.status='active'
+    """)
+    orders_list = cursor.fetchall()
+    if not orders_list:
+        await message.answer("Активных заказов нет ❌")
+        return
+    for o in orders_list:
+        kb = InlineKeyboardMarkup()
+        kb.add(InlineKeyboardButton("✅ Завершить", callback_data=f"finish_{o[0]}"))
+        await message.answer(f"ID: {o[0]}\nТелефон: {o[1]}\nКомплект: {o[2]}", reply_markup=kb)
+
+# Хендлер кнопки
+@dp.callback_query_handler(lambda c: c.data.startswith("finish_"))
+async def finish_order_callback(callback: types.CallbackQuery):
+    order_id = int(callback.data.split("_")[1])
+    cursor.execute("UPDATE orders SET status='finished' WHERE id=?", (order_id,))
+    conn.commit()
+    await callback.answer("Заказ завершён ✅")
+    await bot.send_message(callback.from_user.id, f"Заказ {order_id} завершён")
+
 # запуск бота
 
 executor.start_polling(dp)
+
 
 
 
