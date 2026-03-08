@@ -226,6 +226,12 @@ async def main_phone(message: types.Message):
 @dp.message_handler(state=Form.main_phone)
 async def save_main_phone(message: types.Message, state: FSMContext):
     user_id = message.from_user.id
+    main_phone = message.text
+    cursor.execute(
+    "UPDATE clients SET main_phone=? WHERE user_id=?",
+    (phone, user_id)
+)
+conn.commit()
     if user_id not in orders:
         orders[user_id] = {}
     orders[user_id]["phone"] = message.text
@@ -260,6 +266,12 @@ async def delivery(message: types.Message):
 @dp.message_handler(state=Form.address)
 async def save_address(message: types.Message, state: FSMContext):
     user_id = message.from_user.id
+    delivery = message.text
+    cursor.execute(
+        "UPDATE orders SET delivery=? WHERE user_id=? AND status='new'",
+        (delivery, user_id)
+    )
+    conn.commit()
     if user_id not in orders:
         orders[user_id] = {}
     orders[user_id]["address"] = message.text
@@ -270,6 +282,12 @@ async def save_address(message: types.Message, state: FSMContext):
 @dp.message_handler(lambda m: m.text == "🏠 Самовывоз")
 async def pickup(message: types.Message):
     user_id = message.from_user.id
+    delivery = message.text
+    cursor.execute(
+        "UPDATE orders SET delivery=? WHERE user_id=? AND status='new'",
+        (delivery, user_id)
+    )
+    conn.commit()
     if user_id not in orders:
         orders[user_id] = {}
     orders[user_id]["delivery"] = "Самовывоз"
@@ -293,6 +311,12 @@ async def wish(message: types.Message):
 @dp.message_handler(state=Form.wish)
 async def save_wish(message: types.Message, state: FSMContext):
     user_id = message.from_user.id
+    wishes = message.text
+    cursor.execute(
+        "UPDATE orders SET wishes=? WHERE user_id=? AND status='new'",
+        (wishes, user_id)
+    )
+    conn.commit()
     if user_id not in orders:
         orders[user_id] = {}
     orders[user_id]["wish"] = message.text
@@ -468,7 +492,7 @@ async def active_orders(message: types.Message):
         return
     text = "📋 Активные заказы:\n"
     for o in orders_list:
-        text += f"\nID: {o[0]}\nОсновной: {o[1]}\nДоп.: {o[2]}\nКомплект: {o[3]}\n---"
+        text += f"\nКомплект: {o[0]}\nОсновной номер: {o[1]}\nСпособ получения.: {o[2]}\nПредпочтения: {o[3]}\n---"
     await message.answer(text)
 
 @dp.message_handler(lambda m: m.from_user.id == ADMIN_ID and m.text == "📦 Завершить заказ")
@@ -501,6 +525,7 @@ async def finish_order_callback(callback: types.CallbackQuery):
 # запуск бота
 
 executor.start_polling(dp)
+
 
 
 
