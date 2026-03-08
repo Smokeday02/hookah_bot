@@ -335,6 +335,9 @@ async def finish(message: types.Message):
     if not data.get("doc"):
         await message.answer("Отправьте PDF удостоверение")
         return
+    if not data.get("extra_phone"):
+        await message.answer("Введите дополнительный номер")
+        return
 
     # база клиентов
     today = str(datetime.date.today())
@@ -470,6 +473,7 @@ async def finish_order_callback(callback: types.CallbackQuery):
 # запуск бота
 
 executor.start_polling(dp)
+
 
 
 
