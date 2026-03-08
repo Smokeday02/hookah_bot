@@ -244,13 +244,15 @@ async def document(message: types.Message):
     user_id = message.from_user.id
     if user_id not in orders:
         orders[user_id] = {}
-        await Form.document.set()
-        await message.answer("Отправьте удостоверение в PDF формате")
-    if message.document.mime_type == "application/pdf":
+    if message.document.mime_type == "application/pdf" or message.document.file_name.endswith(".pdf"):
         orders[user_id]["doc"] = message.document.file_id
         await message.answer("PDF удостоверение получено ✅", reply_markup=menu)
     else:
-        await message.answer("Пожалуйста, отправьте удостоверение в PDF формате")
+        await message.answer("❌ Пожалуйста, отправьте удостоверение в PDF формате")
+        
+@dp.message_handler(lambda m: m.text == "📄 Отправить удостоверение")
+async def send_pdf_instruction(message: types.Message):
+    await message.answer("Пожалуйста, отправьте ваше удостоверение в PDF формате 📄")
 
 # проверка заказа
 @dp.message_handler(lambda m: m.text == "📋 Проверить заказ")
@@ -288,9 +290,6 @@ async def finish(message: types.Message):
         return
     if not data.get("doc"):
         await message.answer("Отправьте PDF удостоверение")
-        return
-    if not data.get("extra_phone"):
-        await message.answer("Введите дополнительный номер")
         return
 
     # база клиентов
@@ -362,8 +361,6 @@ async def admin_buttons(callback: types.CallbackQuery):
 # запуск бота
 
 executor.start_polling(dp)
-
-
 
 
 
