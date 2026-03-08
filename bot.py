@@ -55,7 +55,7 @@ conn.commit()
 # =======================
 def create_order(user_id, pack):
     cursor.execute(
-        "INSERT INTO orders (, pack, status) VALUES (?, ?, 'new')",
+        "INSERT INTO orders (user_id, pack, status) VALUES (?, ?, 'new')",
         (user_id, pack)
     )
     conn.commit()
@@ -541,6 +541,7 @@ async def finish_order(callback: types.CallbackQuery):
 # запуск бота
 
 executor.start_polling(dp)
+
 
 
 
