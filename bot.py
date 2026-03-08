@@ -121,7 +121,7 @@ async def choose_pack(message: types.Message):
     kb.add("Легкий - 10000", "Средний - 13000", "Крепкий - 16000")
     await message.answer("Выберите комплект", reply_markup=kb)
 
-@dp.message_handler(lambda m: m.text in ["Легкий - 10000"])
+@dp.message_handler(lambda m: m.text in ["Легкий - 10000", state=None])
 async def save_pack(message: types.Message):
 
     text = """
@@ -146,7 +146,7 @@ async def save_pack(message: types.Message):
     orders[user_id]["pack"] = message.text
     await message.answer("Комплект сохранён ✅", reply_markup=menu)
 
-@dp.message_handler(lambda m: m.text in ["Средний - 13000"])
+@dp.message_handler(lambda m: m.text in ["Средний - 13000", state=None])
 async def save_pack(message: types.Message):
 
     text = """
@@ -171,7 +171,7 @@ async def save_pack(message: types.Message):
     orders[user_id]["pack"] = message.text
     await message.answer("Комплект сохранён ✅", reply_markup=menu)
 
-@dp.message_handler(lambda m: m.text in ["Крепкий - 16000"])
+@dp.message_handler(lambda m: m.text == "Крепкий - 16000", state=None)
 async def save_pack(message: types.Message):
 
     text = """
@@ -480,6 +480,7 @@ async def finish_order_callback(callback: types.CallbackQuery):
 # запуск бота
 
 executor.start_polling(dp)
+
 
 
 
