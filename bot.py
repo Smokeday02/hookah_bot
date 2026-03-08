@@ -511,20 +511,36 @@ async def finish_order_prompt(message: types.Message):
     for o in orders_list:
         kb = InlineKeyboardMarkup()
         kb.add(InlineKeyboardButton("✅ Завершить", callback_data=f"finish_{o[0]}"))
-        await message.answer(f"ID: {o[0]}\nТелефон: {o[1]}\nКомплект: {o[2]}", reply_markup=kb)
+        await message.answer(f"Комплект: {o[0]}\nТелефон: {o[1]}\nСпособ получения: {o[2]}", reply_markup=kb)
 
 # Хендлер кнопки
 @dp.callback_query_handler(lambda c: c.data.startswith("finish_"))
-async def finish_order_callback(callback: types.CallbackQuery):
-    order_id = int(callback.data.split("_")[1])
-    cursor.execute("UPDATE orders SET status='finished' WHERE id=?", (order_id,))
+async def finish_order(callback: types.CallbackQuery):
+    order_id = int(callback.data.split("_")[1])  # получаем id заказа
+
+    # обновляем статус заказа в базе
+    cursor.execute("UPDATE orders SET status='completed' WHERE id=?", (order_id,))
     conn.commit()
-    await callback.answer("Заказ завершён ✅")
-    await bot.send_message(callback.from_user.id, f"Заказ {order_id} завершён")
+
+    # получаем user_id клиента, чтобы уведомить
+    cursor.execute("SELECT user_id, pack FROM orders WHERE id=?", (order_id,))
+    order = cursor.fetchone()
+    if order:
+        user_id = order[0]
+        pack = order[1]
+        await bot.send_message(user_id, f"✅ Ваш заказ '{pack}' завершён!")
+
+    # уведомляем администратора (кнопка перестанет быть активной)
+    await callback.answer("Заказ завершён ✅", show_alert=True)
+    await bot.edit_message_reply_markup(
+        chat_id=callback.message.chat.id,
+        message_id=callback.message.message_id,
+        reply_markup=None
 
 # запуск бота
 
 executor.start_polling(dp)
+
 
 
 
