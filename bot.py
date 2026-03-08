@@ -53,7 +53,7 @@ conn.commit()
 # =======================
 # Функции для работы с базой
 # =======================
-def create_order(, pack):
+def create_order(user_id, pack):
     cursor.execute(
         "INSERT INTO orders (, pack, status) VALUES (?, ?, 'new')",
         (user_id, pack)
@@ -541,6 +541,7 @@ async def finish_order(callback: types.CallbackQuery):
 # запуск бота
 
 executor.start_polling(dp)
+
 
 
 
