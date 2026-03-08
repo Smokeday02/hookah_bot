@@ -242,6 +242,7 @@ async def save_wish(message: types.Message, state: FSMContext):
 @dp.message_handler(content_types=types.ContentType.DOCUMENT)
 async def document(message: types.Message):
     user_id = message.from_user.id
+    await message.answer("Отправьте удостоверение в PDF формате")
     if user_id not in orders:
         orders[user_id] = {}
     if message.document.mime_type == "application/pdf":
@@ -286,6 +287,9 @@ async def finish(message: types.Message):
         return
     if not data.get("doc"):
         await message.answer("Отправьте PDF удостоверение")
+        return
+    if not data.get("extra_phone"):
+        await message.answer("Введите дополнительный номер")
         return
 
     # база клиентов
@@ -357,6 +361,7 @@ async def admin_buttons(callback: types.CallbackQuery):
 # запуск бота
 
 executor.start_polling(dp)
+
 
 
 
