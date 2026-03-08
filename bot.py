@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS orders (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER,
     pack TEXT,
-    status TEXT DEFAULT 'active',  -- active или finished
+    status TEXT DEFAULT 'new'  -- new, active, completed, declined
     FOREIGN KEY(user_id) REFERENCES clients(user_id)
 )
 """)
@@ -41,7 +41,7 @@ conn.commit()
 # =======================
 async def create_order(user_id, pack):
     cursor.execute(
-        "INSERT INTO orders (user_id, pack, status) VALUES (?, ?, ?)",
+        "INSERT INTO orders (user_id, pack, status) VALUES (?, ?, 'new')",
         (user_id, pack, 'active')
     )
     conn.commit()
@@ -398,8 +398,19 @@ async def admin_buttons(callback: types.CallbackQuery):
     action, user_id = callback.data.split("_")
     user_id = int(user_id)
     if action == "accept":
+         # обновляем статус заказа в SQLite на active
+        cursor.execute("""
+            UPDATE orders SET status='active' 
+            WHERE user_id=? AND status='new'
+        """, (user_id,))
+        conn.commit()
         await bot.send_message(user_id, "✅ Ваш заказ принят, в ближайшее время менеджер свяжется в вами!")
     elif action == "decline":
+        cursor.execute("""
+            UPDATE orders SET status='declined'
+            WHERE user_id=? AND status='new'
+        """, (user_id,))
+        conn.commit()
         await bot.send_message(user_id, "❌ Заказ отклонён")
     elif action == "courier":
         await bot.send_message(user_id, "🚚 Курьер выехал")
@@ -473,6 +484,7 @@ async def finish_order_callback(callback: types.CallbackQuery):
 # запуск бота
 
 executor.start_polling(dp)
+
 
 
 
