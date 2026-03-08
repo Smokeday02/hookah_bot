@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS orders (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER,
     pack TEXT,
-    status TEXT DEFAULT 'new'  -- new, active, completed, declined
+    status TEXT DEFAULT 'new', -- new, active, completed, declined
     FOREIGN KEY(user_id) REFERENCES clients(user_id)
 )
 """)
@@ -486,6 +486,7 @@ async def finish_order_callback(callback: types.CallbackQuery):
 # запуск бота
 
 executor.start_polling(dp)
+
 
 
 
