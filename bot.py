@@ -141,11 +141,9 @@ async def save_pack(message: types.Message):
 
     await message.answer(text)
     user_id = message.from_user.id
-    pack = message.text
     if user_id not in orders:
         orders[user_id] = {}
     orders[user_id]["pack"] = message.text
-    await create_order(user_id, pack)
     await message.answer("Комплект сохранён ✅", reply_markup=menu)
 
 @dp.message_handler(lambda m: m.text in ["Средний - 13000"])
@@ -168,11 +166,9 @@ async def save_pack(message: types.Message):
 
     await message.answer(text)
     user_id = message.from_user.id
-    pack = message.text
     if user_id not in orders:
         orders[user_id] = {}
     orders[user_id]["pack"] = message.text
-    await create_order(user_id, pack)
     await message.answer("Комплект сохранён ✅", reply_markup=menu)
 
 @dp.message_handler(lambda m: m.text in ["Крепкий - 16000"])
@@ -195,11 +191,9 @@ async def save_pack(message: types.Message):
 
     await message.answer(text)
     user_id = message.from_user.id
-    pack = message.text
     if user_id not in orders:
         orders[user_id] = {}
     orders[user_id]["pack"] = message.text
-    await create_order(user_id, pack)
     await message.answer("Комплект сохранён ✅", reply_markup=menu)
 
 # основной номер
@@ -486,6 +480,7 @@ async def finish_order_callback(callback: types.CallbackQuery):
 # запуск бота
 
 executor.start_polling(dp)
+
 
 
 
