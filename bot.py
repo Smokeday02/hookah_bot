@@ -15,6 +15,8 @@ from aiogram.utils import executor
 conn = sqlite3.connect("bot.db")  # подключение к базе
 cursor = conn.cursor()
 
+cursor.execute("PRAGMA foreign_keys = ON")
+
 # таблица клиентов
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS clients (
@@ -484,6 +486,7 @@ async def finish_order_callback(callback: types.CallbackQuery):
 # запуск бота
 
 executor.start_polling(dp)
+
 
 
 
