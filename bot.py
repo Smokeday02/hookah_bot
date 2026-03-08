@@ -536,10 +536,12 @@ async def finish_order(callback: types.CallbackQuery):
         chat_id=callback.message.chat.id,
         message_id=callback.message.message_id,
         reply_markup=None
+    )
 
 # запуск бота
 
 executor.start_polling(dp)
+
 
 
 
