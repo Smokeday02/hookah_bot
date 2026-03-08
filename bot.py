@@ -17,6 +17,15 @@ cursor = conn.cursor()
 
 cursor.execute("PRAGMA foreign_keys = ON")
 
+def create_client_if_not_exists(user_id, phone=None):
+    cursor.execute("SELECT * FROM clients WHERE user_id = ?", (user_id,))
+    if cursor.fetchone() is None:
+        cursor.execute(
+            "INSERT INTO clients (user_id, phone) VALUES (?, ?)",
+            (user_id, phone)
+        )
+        conn.commit()
+
 # таблица клиентов
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS clients (
@@ -41,7 +50,7 @@ conn.commit()
 # =======================
 # Функции для работы с базой
 # =======================
-async def create_order(user_id, pack):
+def create_order(user_id, pack):
     cursor.execute(
         "INSERT INTO orders (user_id, pack, status) VALUES (?, ?, 'new')",
         (user_id, pack,)
@@ -142,10 +151,11 @@ async def save_pack(message: types.Message):
     await message.answer(text)
     user_id = message.from_user.id
     pack = message.text
+    create_client_if_not_exists(user_id, phone=orders.get(user_id, {}).get("phone"))
     if user_id not in orders:
         orders[user_id] = {}
     orders[user_id]["pack"] = message.text
-    await create_order(user_id, pack)
+    create_order(user_id, pack)
     await message.answer("Комплект сохранён ✅", reply_markup=menu)
 
 @dp.message_handler(lambda m: m.text == "Средний - 13000", state=None)
@@ -169,10 +179,11 @@ async def save_pack(message: types.Message):
     await message.answer(text)
     user_id = message.from_user.id
     pack = message.text
+    create_client_if_not_exists(user_id, phone=orders.get(user_id, {}).get("phone"))
     if user_id not in orders:
         orders[user_id] = {}
     orders[user_id]["pack"] = message.text
-    await create_order(user_id, pack)
+    create_order(user_id, pack)
     await message.answer("Комплект сохранён ✅", reply_markup=menu)
 
 @dp.message_handler(lambda m: m.text == "Крепкий - 16000", state=None)
@@ -196,10 +207,11 @@ async def save_pack(message: types.Message):
     await message.answer(text)
     user_id = message.from_user.id
     pack = message.text
+    create_client_if_not_exists(user_id, phone=orders.get(user_id, {}).get("phone"))
     if user_id not in orders:
         orders[user_id] = {}
     orders[user_id]["pack"] = message.text
-    await create_order(user_id, pack)
+    create_order(user_id, pack)
     await message.answer("Комплект сохранён ✅", reply_markup=menu)
 
 # основной номер
@@ -486,6 +498,7 @@ async def finish_order_callback(callback: types.CallbackQuery):
 # запуск бота
 
 executor.start_polling(dp)
+
 
 
 
