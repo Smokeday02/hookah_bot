@@ -53,7 +53,7 @@ conn.commit()
 def create_order(user_id, pack):
     cursor.execute(
         "INSERT INTO orders (user_id, pack, status) VALUES (?, ?, 'new')",
-        (user_id, pack,)
+        (user_id, pack)
     )
     conn.commit()
 
@@ -454,7 +454,7 @@ async def admin_menu(message: types.Message):
 @dp.message_handler(lambda m: m.from_user.id == ADMIN_ID and m.text == "📊 Активные заказы")
 async def active_orders(message: types.Message):
     cursor.execute("""
-        SELECT o.id, c.main_phone, c.extra_phone, o.pack
+        SELECT o.pack, c.main_phone, o.delivery_method, o.wishes
         FROM orders o
         JOIN clients c ON o.user_id = c.user_id
         WHERE o.status='active'
@@ -472,7 +472,7 @@ async def active_orders(message: types.Message):
 async def finish_order_prompt(message: types.Message):
     # Показываем список активных заказов с кнопкой завершить
     cursor.execute("""
-        SELECT o.id, c.main_phone, o.pack
+        SELECT o.pack, c.main_phone, o.delivery_method, o.wishes
         FROM orders o
         JOIN clients c ON o.user_id = c.user_id
         WHERE o.status='active'
@@ -498,6 +498,7 @@ async def finish_order_callback(callback: types.CallbackQuery):
 # запуск бота
 
 executor.start_polling(dp)
+
 
 
 
